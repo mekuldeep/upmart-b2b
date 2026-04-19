@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom';
 import { Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin } from 'lucide-react';
+import { useCategories } from '@/hooks/useStore';
 
 const Footer = () => {
+  const { categories } = useCategories();
   return (
     <footer className="bg-foreground text-background">
       <div className="container mx-auto px-4 py-12">
@@ -24,11 +26,12 @@ const Footer = () => {
           <div>
             <h4 className="font-display font-semibold mb-4">Quick Links</h4>
             <div className="flex flex-col gap-2 text-sm opacity-70 font-body">
-              <Link to="/men" className="hover:text-primary transition-colors">Men's Footwear</Link>
-              <Link to="/women" className="hover:text-primary transition-colors">Women's Footwear</Link>
-              <Link to="/kids" className="hover:text-primary transition-colors">Kids' Footwear</Link>
-              <Link to="/accessories" className="hover:text-primary transition-colors">Accessories</Link>
-              <Link to="/about" className="hover:text-primary transition-colors">About Us</Link>
+              {categories.slice(0, 5).map(cat => (
+                <Link key={cat.id} to={`/category/${cat.slug}`} className="hover:text-primary transition-colors">
+                  {cat.name} Footwear
+                </Link>
+              ))}
+              <Link to="/about" className="hover:text-primary transition-colors mt-2">About Us</Link>
             </div>
           </div>
 

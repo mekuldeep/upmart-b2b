@@ -3,7 +3,7 @@
  * All calls go to the FastAPI backend at http://localhost:5000.
  */
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'https://8b54-2401-4900-5dd3-8eea-49d1-6f02-59d1-4b17.ngrok-free.app';
+const BASE_URL = (import.meta.env.VITE_API_URL || 'https://00d0-2401-4900-a97b-7d77-2c54-8132-9ba2-5b59.ngrok-free.app').replace(/\/api$/, '');
 
 interface RequestOptions extends RequestInit {
   auth?: boolean;
@@ -17,6 +17,8 @@ async function request<T = unknown>(
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    // Required to bypass ngrok's browser warning page which strips CORS headers
+    'ngrok-skip-browser-warning': 'true',
     ...(fetchOptions.headers as Record<string, string>),
   };
 

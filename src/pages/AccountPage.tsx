@@ -418,31 +418,6 @@ const OrderDetail = ({ order, onBack }: { order: Order; onBack: () => void }) =>
             </div>
           </div>
 
-          {/* Payments */}
-          {o.payments && o.payments.length > 0 && (
-            <div>
-              <h4 className="font-display font-semibold text-foreground mb-3">Payment History</h4>
-              <div className="bg-secondary rounded-xl divide-y divide-border">
-                {o.payments.map(p => (
-                  <div key={p.id} className="flex items-center justify-between p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600">
-                        <CheckCircle className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <p className="font-display font-semibold text-foreground text-sm capitalize">{p.payment_method.replace('_', ' ')}</p>
-                        <p className="text-xs text-muted-foreground font-body">
-                          {new Date(p.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
-                        </p>
-                      </div>
-                    </div>
-                    <p className="font-display font-bold text-foreground">₹{p.amount.toLocaleString('en-IN')}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* Order History */}
           {(o as any).history && (o as any).history.length > 0 && (
             <div>

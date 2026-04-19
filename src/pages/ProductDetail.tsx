@@ -30,16 +30,18 @@ const ProductDetail = () => {
   const { addToCart } = useCart();
   const { user } = useAuth();
 
-  const [selectedVariant, setSelectedVariant] = useState<{ id: number; name: string } | null>(null);
+  const [selectedVariant, setSelectedVariant] = useState<{ id: number; name: string; stock: number } | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [quantityError, setQuantityError] = useState<string | null>(null);
   const [activeImageIdx, setActiveImageIdx] = useState(0);
   const [added, setAdded] = useState(false);
 
+  const availableStock = selectedVariant ? selectedVariant.stock : (product?.stock || 0);
+
   const minQty = product?.min_order_qty || 1;
   const groupSize = product?.is_group_order_enabled && (product?.group_size || 0) > 0 ? product?.group_size! : 1;
   const effectiveMin = product?.is_group_order_enabled && groupSize > 1
-    ? Math.ceil(minQty / groupSize) * groupSize
+    ? Math.max(Math.ceil(minQty / groupSize) * groupSize, groupSize)
     : minQty;
 
   useEffect(() => {
@@ -50,14 +52,22 @@ const ProductDetail = () => {
     if (product) {
       setQuantity(effectiveMin);
     }
-  }, [product?.id, effectiveMin]);
+  }, [product?.id]); // Removed effectiveMin from dep array so it only sets once when product loads
 
   const increaseQty = () => {
     if (!product) return;
     setQuantity(prev => {
       const step = product.is_group_order_enabled && groupSize > 1 ? groupSize : 1;
-      const nextVal = prev + step;
-      return Math.min(nextVal, product.stock);
+      let nextVal = prev;
+      
+      // If the current value is not a clean multiple of groupSize, snap it to nearest higher multiple
+      if (step > 1 && prev % step !== 0) {
+        nextVal = Math.ceil(prev / step) * step;
+      } else {
+        nextVal += step;
+      }
+      
+      return Math.min(nextVal, availableStock);
     });
     setQuantityError(null);
   };
@@ -66,7 +76,15 @@ const ProductDetail = () => {
     if (!product) return;
     setQuantity(prev => {
       const step = product.is_group_order_enabled && groupSize > 1 ? groupSize : 1;
-      const nextVal = prev - step;
+      let nextVal = prev;
+      
+      // Snap to nearest lower multiple if not aligned
+      if (step > 1 && prev % step !== 0) {
+        nextVal = Math.floor(prev / step) * step;
+      } else {
+        nextVal -= step;
+      }
+      
       return Math.max(effectiveMin, nextVal);
     });
     setQuantityError(null);
@@ -108,7 +126,7 @@ const ProductDetail = () => {
   const activeImage = displayImages[activeImageIdx] || null;
 
   const handleAddToCart = () => {
-    if (!product.in_stock) {
+    if (availableStock <= 0) {
       toast.error('This product is out of stock');
       return;
     }
@@ -165,7 +183,7 @@ const ProductDetail = () => {
                 <Package className="w-20 h-20 text-muted-foreground/30" />
               </div>
             )}
-            {!product.in_stock && (
+            {availableStock <= 0 && (
               <div className="absolute inset-0 bg-foreground/50 flex items-center justify-center">
                 <span className="bg-destructive text-destructive-foreground px-4 py-2 rounded-full font-display font-bold">
                   Out of Stock
@@ -229,9 +247,9 @@ const ProductDetail = () => {
           </div>
 
           {/* Stock status */}
-          <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-display font-semibold mb-6 ${product.in_stock ? 'bg-green-100 text-green-700' : 'bg-destructive/10 text-destructive'}`}>
-            <div className={`w-2 h-2 rounded-full ${product.in_stock ? 'bg-green-500' : 'bg-destructive'}`} />
-            {product.in_stock ? `In Stock (${product.stock} units)` : 'Out of Stock'}
+          <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-display font-semibold mb-6 ${availableStock > 0 ? 'bg-green-100 text-green-700' : 'bg-destructive/10 text-destructive'}`}>
+            <div className={`w-2 h-2 rounded-full ${availableStock > 0 ? 'bg-green-500' : 'bg-destructive'}`} />
+            {availableStock > 0 ? `In Stock (${availableStock} units)` : 'Out of Stock'}
           </div>
 
           {/* Variants */}
@@ -243,7 +261,7 @@ const ProductDetail = () => {
                   <button
                     key={v.id}
                     onClick={() => {
-                      setSelectedVariant(selectedVariant?.id === v.id ? null : { id: v.id, name: v.name });
+                      setSelectedVariant(selectedVariant?.id === v.id ? null : { id: v.id, name: v.name, stock: v.stock });
                       setActiveImageIdx(0);
                     }}
                     className={`px-4 py-2 rounded-lg border text-sm font-display font-semibold transition-all ${selectedVariant?.id === v.id ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card text-foreground hover:border-primary'}`}
@@ -290,8 +308,8 @@ const ProductDetail = () => {
                     setQuantityError('Please enter a valid quantity');
                   } else if (v < minQty) {
                     setQuantityError(`Minimum order quantity is ${minQty}`);
-                  } else if (v > product.stock) {
-                    setQuantityError(`Only ${product.stock} units available in stock`);
+                  } else if (v > availableStock) {
+                    setQuantityError(`Only ${availableStock} units available in stock`);
                   } else if (product.is_group_order_enabled && groupSize > 1 && v % groupSize !== 0) {
                     setQuantityError(`Must be in multiples of ${groupSize}`);
                   } else {
@@ -321,10 +339,10 @@ const ProductDetail = () => {
           {/* Add to cart */}
           <button
             onClick={handleAddToCart}
-            disabled={!product.in_stock}
+            disabled={availableStock <= 0}
             className={`w-full py-4 rounded-xl font-display font-bold text-lg flex items-center justify-center gap-3 transition-all ${added
                 ? 'bg-green-500 text-white'
-                : !product.in_stock
+                : availableStock <= 0
                   ? 'bg-muted text-muted-foreground cursor-not-allowed'
                   : 'bg-primary text-primary-foreground hover:opacity-90 hover:shadow-lg'
               }`}
@@ -332,7 +350,7 @@ const ProductDetail = () => {
             {added ? (
               <><Check className="w-5 h-5" /> Added to Cart!</>
             ) : (
-              <><ShoppingCart className="w-5 h-5" /> {product.in_stock ? 'Add to Cart' : 'Out of Stock'}</>
+              <><ShoppingCart className="w-5 h-5" /> {availableStock > 0 ? 'Add to Cart' : 'Out of Stock'}</>
             )}
           </button>
 
@@ -353,7 +371,7 @@ const ProductDetail = () => {
               {[
                 { label: 'SKU', value: product.sku },
                 { label: 'Category', value: product.category_name || '—' },
-                { label: 'Stock', value: `${product.stock} units` },
+                { label: 'Base Stock', value: `${product.stock} units` },
                 { label: 'Min Order Qty', value: product.min_order_qty },
                 ...(product.is_group_order_enabled ? [{ label: 'Group Size', value: product.group_size }] : []),
               ].map(({ label, value }) => (
