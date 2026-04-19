@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { SlidersHorizontal, Search, ChevronDown, Loader2, X, Grid3X3, List } from 'lucide-react';
 import { useProducts, useCategories } from '@/hooks/useStore';
-import { productsApi, Product } from '@/lib/api';
+import { productsApi, Product, getImageUrl } from '@/lib/api';
+
 import ProductCard from '@/components/ProductCard';
 
 const SORT_OPTIONS = [
@@ -234,12 +235,6 @@ const ProductsPage = () => {
 };
 
 // Compact list view card
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-const getImageUrl = (url?: string) => {
-  if (!url) return null;
-  if (url.startsWith('http')) return url;
-  return `${BASE_URL}${url}`;
-};
 
 const ListProductCard = ({ product }: { product: Product }) => {
   const imageUrl = product.primary_image?.url ? getImageUrl(product.primary_image.url) : null;

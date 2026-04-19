@@ -3,9 +3,8 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Truck, Shield, Headphones, BadgePercent, Search, ChevronRight, Loader2 } from 'lucide-react';
 import { useProducts, useCategories } from '@/hooks/useStore';
 import ProductCard from '@/components/ProductCard';
-import { Category } from '@/lib/api';
+import { Category, getImageUrl, Product } from '@/lib/api';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 const CATEGORY_EMOJIS: Record<string, string> = {
   men: '👞',

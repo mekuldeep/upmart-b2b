@@ -1,20 +1,12 @@
 import { Link } from 'react-router-dom';
 import { ShoppingCart, Package } from 'lucide-react';
-import { Product } from '@/lib/api';
+import { Product, getImageUrl } from '@/lib/api';
 import { useCart } from '@/contexts/CartContext';
 import { toast } from 'sonner';
-
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 interface ProductCardProps {
   product: Product;
 }
-
-const getImageUrl = (url?: string): string => {
-  if (!url) return '';
-  if (url.startsWith('http')) return url;
-  return `${BASE_URL}${url}`;
-};
 
 const ProductCard = ({ product }: ProductCardProps) => {
   const { addToCart } = useCart();

@@ -9,19 +9,10 @@ import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import ProductCard from '@/components/ProductCard';
 import { toast } from 'sonner';
+import { getImageUrl } from '@/lib/api';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-const getImageUrl = (url?: string) => {
-  if (!url) return null;
-  if (url.startsWith('http')) return url;
-  return `${BASE_URL}${url}`;
-};
 
-const STATUS_COLORS: Record<string, string> = {
-  active: 'bg-green-100 text-green-700',
-  draft: 'bg-yellow-100 text-yellow-700',
-  archived: 'bg-gray-100 text-gray-600',
-};
+
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();

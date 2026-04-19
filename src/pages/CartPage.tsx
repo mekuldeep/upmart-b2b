@@ -3,15 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Trash2, ShoppingBag, ArrowLeft, CheckCircle, Tag, X, Loader2, MapPin, CreditCard } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { couponsApi, ordersApi } from '@/lib/api';
+import { couponsApi, ordersApi, getImageUrl } from '@/lib/api';
 import { toast } from 'sonner';
-
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-const getImageUrl = (url?: string) => {
-  if (!url) return null;
-  if (url.startsWith('http')) return url;
-  return `${BASE_URL}${url}`;
-};
 
 const PAYMENT_METHODS = [
   { value: 'cod', label: 'Cash on Delivery', icon: '💵' },
@@ -281,31 +274,6 @@ const CartPage = () => {
               className="w-full px-3 py-2 rounded-lg bg-secondary text-foreground font-body text-sm focus:outline-none focus:ring-2 focus:ring-primary placeholder:text-muted-foreground resize-none"
             />
           </div>
-
-          {/* Payment Method */}
-          {/* Payment Method - Commented out as per request
-          <div className="bg-card rounded-xl p-5 shadow-soft">
-            <h3 className="font-display font-semibold text-foreground mb-3 flex items-center gap-2">
-              <CreditCard className="w-4 h-4 text-primary" /> Payment Method
-            </h3>
-            <div className="space-y-2">
-              {PAYMENT_METHODS.map(pm => (
-                <label key={pm.value} className="flex items-center gap-3 p-3 rounded-lg cursor-pointer hover:bg-secondary transition-colors">
-                  <input
-                    type="radio"
-                    name="payment"
-                    value={pm.value}
-                    checked={paymentMethod === pm.value}
-                    onChange={() => setPaymentMethod(pm.value)}
-                    className="accent-primary"
-                  />
-                  <span className="text-lg">{pm.icon}</span>
-                  <span className="font-body text-sm text-foreground">{pm.label}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-          */}
 
           {/* Notes */}
           <div className="bg-card rounded-xl p-5 shadow-soft">
