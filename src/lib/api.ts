@@ -3,13 +3,25 @@
  * All calls go to the FastAPI backend at http://localhost:5000.
  */
 
-export const BASE_URL = (import.meta.env.VITE_API_URL || 'https://00d0-2401-4900-a97b-7d77-2c54-8132-9ba2-5b59.ngrok-free.app').replace(/\/api$/, '');
+export const BASE_URL = (import.meta.env.VITE_API_URL || 'https://f597-117-99-98-77.ngrok-free.app').replace(/\/api\/?$/, '');
 
 export const getImageUrl = (url?: string) => {
-  if (!url) return null;
+  if (!url) return "";
   if (url.startsWith('http')) return url;
-  const cleanUrl = url.startsWith('/') ? url : `/${url}`;
-  return `${BASE_URL}${cleanUrl}`;
+
+  // Ensure we don't have double slashes
+  const cleanBase = BASE_URL.endsWith('/') ? BASE_URL.slice(0, -1) : BASE_URL;
+  const cleanPath = url.startsWith('/') ? url : `/${url}`;
+
+  const fullUrl = `${cleanBase}${cleanPath}`;
+
+  // Append ngrok skip warning parameter if it's an ngrok URL
+  if (fullUrl.includes('ngrok-free.app')) {
+    const connector = fullUrl.includes('?') ? '&' : '?';
+    return `${fullUrl}${connector}ngrok-skip-browser-warning=true`;
+  }
+
+  return fullUrl;
 };
 
 
