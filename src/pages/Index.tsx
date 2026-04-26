@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, Truck, Shield, Headphones, BadgePercent, Search, ChevronRight, Loader2 } from 'lucide-react';
 import { useProducts, useCategories } from '@/hooks/useStore';
 import ProductCard from '@/components/ProductCard';
+import NgrokImage from '@/components/NgrokImage';
 import { Category, getImageUrl, Product } from '@/lib/api';
 
 
@@ -174,8 +175,9 @@ const Index = () => {
                   <Link
                     key={cat.id}
                     to={`/category/${cat.slug}`}
-                    className="bg-card rounded-xl p-6 text-center shadow-soft hover:shadow-card hover:-translate-y-1 transition-all group"
+                    className="relative bg-card rounded-xl p-6 text-center shadow-soft hover:shadow-card hover:-translate-y-1 transition-all group overflow-hidden"
                   >
+                    {cat.name === 'Accessories' && <div className="absolute right-0 bottom-0 w-16 h-16 bg-muted-foreground/10 rounded-tl-full" />}
                     <span className="text-4xl block mb-3">{getCategoryEmoji(cat.slug)}</span>
                     <span className="font-display font-semibold text-foreground group-hover:text-primary transition-colors">
                       {cat.name}

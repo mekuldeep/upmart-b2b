@@ -5,6 +5,7 @@ import { useProducts, useCategories } from '@/hooks/useStore';
 import { productsApi, Product, getImageUrl } from '@/lib/api';
 
 import ProductCard from '@/components/ProductCard';
+import NgrokImage from '@/components/NgrokImage';
 
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Newest First' },
@@ -242,7 +243,7 @@ const ListProductCard = ({ product }: { product: Product }) => {
     <Link to={`/product/${product.id}`} className="flex gap-4 bg-card rounded-xl shadow-soft hover:shadow-card transition-all p-4 group">
       <div className="w-24 h-24 rounded-lg overflow-hidden bg-secondary flex-shrink-0">
         {imageUrl ? (
-          <img src={imageUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+          <NgrokImage src={imageUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">No img</div>
         )}

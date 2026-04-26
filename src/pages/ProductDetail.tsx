@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import ProductCard from '@/components/ProductCard';
 import { toast } from 'sonner';
 import { getImageUrl } from '@/lib/api';
+import NgrokImage from '@/components/NgrokImage';
 
 
 
@@ -178,9 +179,10 @@ const ProductDetail = () => {
           {/* Main image */}
           <div className="relative aspect-square rounded-2xl overflow-hidden bg-secondary mb-3">
             {activeImage ? (
-              <img
+              <NgrokImage
                 src={getImageUrl(activeImage.url) || ''}
                 alt={product.name}
+                crossOrigin="anonymous"
                 className="w-full h-full object-cover"
               />
             ) : (
@@ -224,7 +226,12 @@ const ProductDetail = () => {
                   onClick={() => setActiveImageIdx(i)}
                   className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${activeImageIdx === i ? 'border-primary' : 'border-border hover:border-muted-foreground'}`}
                 >
-                  <img src={getImageUrl(img.url) || ''} alt="" className="w-full h-full object-cover" />
+                  <NgrokImage 
+                    src={getImageUrl(img.url) || ''} 
+                    alt="" 
+                    crossOrigin="anonymous"
+                    className="w-full h-full object-cover" 
+                  />
                 </button>
               ))}
             </div>

@@ -4,6 +4,7 @@ import { Trash2, ShoppingBag, ArrowLeft, CheckCircle, Tag, X, Loader2, MapPin, C
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { couponsApi, ordersApi, getImageUrl } from '@/lib/api';
+import NgrokImage from '@/components/NgrokImage';
 import { toast } from 'sonner';
 
 const PAYMENT_METHODS = [
@@ -160,9 +161,9 @@ const CartPage = () => {
             return (
               <div key={`${item.product.id}-${item.variant?.id}`} className="bg-card rounded-xl p-4 shadow-soft flex gap-4">
                 <Link to={`/product/${item.product.id}`} className="flex-shrink-0">
-                  <div className="w-24 h-24 rounded-lg overflow-hidden bg-secondary">
+                  <div className="w-24 h-24 flex-shrink-0 bg-secondary rounded-lg overflow-hidden relative">
                     {imageUrl ? (
-                      <img src={imageUrl} alt={item.product.name} className="w-full h-full object-cover" />
+                      <NgrokImage src={imageUrl} alt={item.product.name} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">No img</div>
                     )}

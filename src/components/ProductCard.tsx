@@ -3,6 +3,7 @@ import { ShoppingCart, Package } from 'lucide-react';
 import { Product, getImageUrl } from '@/lib/api';
 import { useCart } from '@/contexts/CartContext';
 import { toast } from 'sonner';
+import NgrokImage from '@/components/NgrokImage';
 
 interface ProductCardProps {
   product: Product;
@@ -41,12 +42,13 @@ const ProductCard = ({ product }: ProductCardProps) => {
       {/* Image */}
       <div className="relative aspect-square bg-secondary overflow-hidden">
         {imageUrl ? (
-          <img
+          <NgrokImage
             src={imageUrl}
             alt={product.name}
+            crossOrigin="anonymous"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = 'none';
+            onError={(e: any) => {
+              if (e.target) e.target.style.display = 'none';
             }}
           />
         ) : (

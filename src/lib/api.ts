@@ -9,7 +9,7 @@ export const BASE_URL = (import.meta.env.VITE_API_URL || 'https://2393-106-219-2
 
 export const getImageUrl = (url?: string) => {
   if (!url) return "";
-  
+
   let fullUrl = url;
   if (!url.startsWith('http')) {
     // Ensure we don't have double slashes
