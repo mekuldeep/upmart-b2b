@@ -285,6 +285,24 @@ const ProductDetail = () => {
             </div>
           )}
 
+          {/* Sizes */}
+          {product.sizes && product.sizes.length > 0 && (
+            <div className="mb-6">
+              <p className="font-display text-sm font-semibold text-foreground mb-2">Available Sizes</p>
+              <div className="flex flex-wrap gap-2">
+                {product.sizes.map(size => (
+                  <span
+                    key={size}
+                    className="px-4 py-2 rounded-lg border border-border bg-secondary/30 text-foreground text-sm font-display font-semibold"
+                  >
+                    {size}
+                  </span>
+                ))}
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-1 font-body">* For informational purposes only</p>
+            </div>
+          )}
+
           {/* Quantity */}
           <div className="mb-6">
             <p className="font-display text-sm font-semibold text-foreground mb-2">

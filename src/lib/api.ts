@@ -176,6 +176,7 @@ export interface Product {
   group_size?: number;
   variants: ProductVariant[];
   images: ProductImage[];
+  sizes?: string[];
   primary_image?: ProductImage;
   created_at: string;
 }
