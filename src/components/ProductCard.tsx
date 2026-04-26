@@ -19,7 +19,11 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!product.in_stock) {
+    const availableStock = product.variants && product.variants.length > 0 
+      ? product.variants.reduce((acc, v) => acc + v.stock, 0)
+      : product.stock;
+
+    if (availableStock <= 0) {
       toast.error('This product is out of stock');
       return;
     }
@@ -30,7 +34,8 @@ const ProductCard = ({ product }: ProductCardProps) => {
       ? Math.ceil(minQty / groupSize) * groupSize
       : minQty;
 
-    addToCart(product, quantity);
+    const selectedVariant = product.variants && product.variants.length > 0 ? product.variants[0] : undefined;
+    addToCart(product, quantity, selectedVariant);
     toast.success(`${product.name} added to cart!`);
   };
 
@@ -58,7 +63,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
         )}
 
         {/* Out of stock badge */}
-        {!product.in_stock && (
+        {(product.variants && product.variants.length > 0 ? product.variants.every(v => v.stock <= 0) : product.stock <= 0) && (
           <div className="absolute inset-0 bg-foreground/50 flex items-center justify-center">
             <span className="bg-destructive text-destructive-foreground text-xs font-display font-bold px-3 py-1 rounded-full">
               Out of Stock
@@ -67,7 +72,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
         )}
 
         {/* Add to cart button */}
-        {product.in_stock && (
+        {(product.variants && product.variants.length > 0 ? product.variants.some(v => v.stock > 0) : product.stock > 0) && (
           <button
             onClick={handleAddToCart}
             id={`add-to-cart-${product.id}`}
@@ -90,7 +95,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
         </h3>
         <div className="flex items-center justify-between">
           <p className="font-display font-bold text-primary text-base">
-            ₹{product.price.toLocaleString('en-IN')}
+            ₹{(product.variants && product.variants.length > 0 && product.variants[0].price ? product.variants[0].price : product.price).toLocaleString('en-IN')}
           </p>
           {product.min_order_qty > 1 && (
             <span className="text-xs text-muted-foreground font-body">

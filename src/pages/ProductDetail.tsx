@@ -22,13 +22,14 @@ const ProductDetail = () => {
   const { addToCart } = useCart();
   const { user } = useAuth();
 
-  const [selectedVariant, setSelectedVariant] = useState<{ id: number; name: string; stock: number } | null>(null);
+  const [selectedVariant, setSelectedVariant] = useState<{ id: number; name: string; stock: number; price?: number } | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [quantityError, setQuantityError] = useState<string | null>(null);
   const [activeImageIdx, setActiveImageIdx] = useState(0);
   const [added, setAdded] = useState(false);
 
   const availableStock = selectedVariant ? selectedVariant.stock : (product?.stock || 0);
+  const currentPrice = selectedVariant?.price !== undefined && selectedVariant?.price !== null ? selectedVariant.price : (product?.price || 0);
 
   const minQty = product?.min_order_qty || 1;
   const groupSize = product?.is_group_order_enabled && (product?.group_size || 0) > 0 ? product?.group_size! : 1;
@@ -43,6 +44,16 @@ const ProductDetail = () => {
   useEffect(() => {
     if (product) {
       setQuantity(effectiveMin);
+      // Automatically select the first variant if available
+      if (product.variants && product.variants.length > 0) {
+        const firstVariant = product.variants[0];
+        setSelectedVariant({ 
+          id: firstVariant.id, 
+          name: firstVariant.name, 
+          stock: firstVariant.stock,
+          price: firstVariant.price
+        });
+      }
     }
   }, [product?.id]); // Removed effectiveMin from dep array so it only sets once when product loads
 
@@ -103,28 +114,22 @@ const ProductDetail = () => {
     );
   }
 
-  // Build image list: combine product-level + variant images
-  const allVariantImages = product.variants.flatMap(v => v.images || []);
-  
-  // If a variant is selected, we might want to prioritize its images
-  const currentVariantImages = selectedVariant
-    ? (product.variants.find(v => v.id === selectedVariant.id)?.images || [])
-    : [];
-
+  // Image logic: show images based on selected variant
   let displayImages = [];
-  if (selectedVariant && currentVariantImages.length > 0) {
-    // Show selected variant images first, then others
-    const otherImages = [
-      ...product.images,
-      ...allVariantImages.filter(img => !currentVariantImages.some(cv => cv.id === img.id))
-    ];
-    displayImages = [...currentVariantImages, ...otherImages];
+  
+  if (selectedVariant) {
+    const currentVariant = product.variants.find(v => v.id === selectedVariant.id);
+    if (currentVariant && currentVariant.images && currentVariant.images.length > 0) {
+      displayImages = currentVariant.images;
+    } else {
+      // Fallback to product images if variant has no images
+      displayImages = product.images || [];
+    }
   } else {
-    // Show product images first, then all variant images
-    displayImages = [...product.images, ...allVariantImages];
+    displayImages = product.images || [];
   }
-
-  // Final fallback if absolutely nothing found
+  
+  // Final fallback to primary image if no images found
   if (displayImages.length === 0 && product.primary_image) {
     displayImages = [product.primary_image];
   }
@@ -253,7 +258,7 @@ const ProductDetail = () => {
 
           <div className="flex items-baseline gap-3 mb-6">
             <span className="font-display text-4xl font-extrabold text-primary">
-              ₹{product.price.toLocaleString('en-IN')}
+              ₹{currentPrice.toLocaleString('en-IN')}
             </span>
             <span className="text-sm text-muted-foreground font-body">per unit</span>
           </div>
@@ -273,7 +278,12 @@ const ProductDetail = () => {
                   <button
                     key={v.id}
                     onClick={() => {
-                      setSelectedVariant(selectedVariant?.id === v.id ? null : { id: v.id, name: v.name, stock: v.stock });
+                      setSelectedVariant({ 
+                        id: v.id, 
+                        name: v.name, 
+                        stock: v.stock,
+                        price: v.price
+                      });
                       setActiveImageIdx(0);
                     }}
                     className={`px-4 py-2 rounded-lg border text-sm font-display font-semibold transition-all ${selectedVariant?.id === v.id ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card text-foreground hover:border-primary'}`}
@@ -356,7 +366,7 @@ const ProductDetail = () => {
                 <Plus className="w-4 h-4" />
               </button>
               <span className="text-sm text-muted-foreground font-body">
-                = ₹{((product.price || 0) * (quantity || 0)).toLocaleString('en-IN')}
+                = ₹{(currentPrice * (quantity || 0)).toLocaleString('en-IN')}
               </span>
             </div>
             {quantityError && (
@@ -401,7 +411,7 @@ const ProductDetail = () => {
               {[
                 { label: 'SKU', value: product.sku },
                 { label: 'Category', value: product.category_name || '—' },
-                { label: 'Base Stock', value: `${product.stock} units` },
+                { label: 'Stock', value: `${availableStock} units` },
                 { label: 'Min Order Qty', value: product.min_order_qty },
                 ...(product.is_group_order_enabled ? [{ label: 'Group Size', value: product.group_size }] : []),
               ].map(({ label, value }) => (
