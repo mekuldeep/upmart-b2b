@@ -3,7 +3,7 @@
  * All calls go to the FastAPI backend at http://localhost:5000.
  */
 
-export const BASE_URL = (import.meta.env.VITE_API_URL || 'https://2393-106-219-205-156.ngrok-free.app').replace(/\/api\/?$/, '');
+export const BASE_URL = (import.meta.env.VITE_API_URL || 'http://15.135.76.247').replace(/\/api\/?$/, '');
 // ⚠️  IMPORTANT: When ngrok URL changes, update VITE_API_URL in Vercel env vars AND redeploy.
 //    The hardcoded fallback above is only used in local dev. On Vercel, VITE_API_URL must be set.
 
