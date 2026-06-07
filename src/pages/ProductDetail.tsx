@@ -180,41 +180,44 @@ const ProductDetail = () => {
 
       <div className="grid md:grid-cols-2 gap-10 mb-16">
         {/* Images */}
-        <div>
-          {/* Main image */}
-          <div className="relative aspect-square rounded-2xl overflow-hidden bg-secondary mb-3">
-            {activeImage ? (
-              <NgrokImage
-                src={getImageUrl(activeImage.url) || ''}
-                alt={product.name}
-                crossOrigin="anonymous"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center">
-                <Package className="w-20 h-20 text-muted-foreground/30" />
-              </div>
-            )}
-            {availableStock <= 0 && (
-              <div className="absolute inset-0 bg-foreground/50 flex items-center justify-center">
-                <span className="bg-destructive text-destructive-foreground px-4 py-2 rounded-full font-display font-bold">
-                  Out of Stock
-                </span>
-              </div>
-            )}
+        <div className="w-full max-w-[400px] mx-auto">
+          {/* Main image wrapper to allow buttons outside the card */}
+          <div className="relative mb-3">
+            {/* Main image card */}
+            <div className="relative aspect-square rounded-2xl overflow-hidden bg-white border border-border flex items-center justify-center">
+              {activeImage ? (
+                <NgrokImage
+                  src={getImageUrl(activeImage.url) || ''}
+                  alt={product.name}
+                  crossOrigin="anonymous"
+                  className="w-full h-full object-contain p-6"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-secondary">
+                  <Package className="w-20 h-20 text-muted-foreground/30" />
+                </div>
+              )}
+              {availableStock <= 0 && (
+                <div className="absolute inset-0 bg-foreground/50 flex items-center justify-center">
+                  <span className="bg-destructive text-destructive-foreground px-4 py-2 rounded-full font-display font-bold">
+                    Out of Stock
+                  </span>
+                </div>
+              )}
+            </div>
 
-            {/* Nav arrows */}
+            {/* Nav arrows (outside the overflow-hidden card) */}
             {displayImages.length > 1 && (
               <>
                 <button
                   onClick={() => setActiveImageIdx(i => i > 0 ? i - 1 : displayImages.length - 1)}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-background/80 flex items-center justify-center hover:bg-background transition-colors"
+                  className="absolute left-3 md:-left-12 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-background border border-border flex items-center justify-center hover:bg-secondary transition-colors shadow-soft z-10"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => setActiveImageIdx(i => i < displayImages.length - 1 ? i + 1 : 0)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-background/80 flex items-center justify-center hover:bg-background transition-colors"
+                  className="absolute right-3 md:-right-12 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-background border border-border flex items-center justify-center hover:bg-secondary transition-colors shadow-soft z-10"
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>
@@ -229,13 +232,13 @@ const ProductDetail = () => {
                 <button
                   key={img.id}
                   onClick={() => setActiveImageIdx(i)}
-                  className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${activeImageIdx === i ? 'border-primary' : 'border-border hover:border-muted-foreground'}`}
+                  className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all bg-white ${activeImageIdx === i ? 'border-primary' : 'border-border hover:border-muted-foreground'}`}
                 >
                   <NgrokImage 
                     src={getImageUrl(img.url) || ''} 
                     alt="" 
                     crossOrigin="anonymous"
-                    className="w-full h-full object-cover" 
+                    className="w-full h-full object-contain p-1" 
                   />
                 </button>
               ))}
