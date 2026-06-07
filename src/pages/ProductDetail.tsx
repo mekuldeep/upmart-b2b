@@ -43,6 +43,55 @@ const ProductDetail = () => {
 
   useEffect(() => {
     if (product) {
+      document.title = `${product.name} - Upmart`;
+      
+      const imageUrl = product.primary_image?.url ? getImageUrl(product.primary_image.url) : '';
+      
+      const updateMeta = (property: string, content: string) => {
+        let element = document.querySelector(`meta[property="${property}"]`) || 
+                      document.querySelector(`meta[name="${property}"]`);
+        if (!element) {
+          element = document.createElement('meta');
+          if (property.startsWith('og:')) {
+            element.setAttribute('property', property);
+          } else {
+            element.setAttribute('name', property);
+          }
+          document.head.appendChild(element);
+        }
+        element.setAttribute('content', content);
+      };
+
+      updateMeta('og:title', `${product.name} - Upmart`);
+      updateMeta('og:description', product.description || `Buy ${product.name} in bulk on Upmart.`);
+      if (imageUrl) {
+        updateMeta('og:image', imageUrl);
+        updateMeta('twitter:image', imageUrl);
+      }
+      updateMeta('og:url', window.location.href);
+    }
+    
+    return () => {
+      document.title = 'Upmart - B2B Wholesale Store';
+      const defaultDesc = 'Buy products in bulk and enjoy wholesale pricing with Upmart.';
+      
+      const resetMeta = (property: string, content: string) => {
+        const element = document.querySelector(`meta[property="${property}"]`) || 
+                        document.querySelector(`meta[name="${property}"]`);
+        if (element) {
+          element.setAttribute('content', content);
+        }
+      };
+      
+      resetMeta('og:title', 'Upmart - B2B Wholesale Store');
+      resetMeta('og:description', defaultDesc);
+      resetMeta('og:image', '/favicon.png');
+      resetMeta('twitter:image', '/favicon.png');
+    };
+  }, [product]);
+
+  useEffect(() => {
+    if (product) {
       setQuantity(effectiveMin);
       // Automatically select the first variant if available
       if (product.variants && product.variants.length > 0) {
