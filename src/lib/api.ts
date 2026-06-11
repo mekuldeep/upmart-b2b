@@ -299,4 +299,27 @@ export const ordersApi = {
     request<{ order: Order }>(`/api/store/orders/${id}`, { auth: true }),
 };
 
-export default { authApi, categoriesApi, productsApi, couponsApi, ordersApi };
+export interface StoreSettings {
+  siteName: string;
+  siteEmail: string;
+  taxRate: string;
+  minOrder: string;
+  facebook?: string;
+  instagram?: string;
+  twitter?: string;
+  youtube?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  phone?: string;
+  email?: string;
+  brands?: string;
+  logo_url?: string;
+}
+
+export const settingsApi = {
+  get: () => request<StoreSettings>('/api/settings'),
+};
+
+export default { authApi, categoriesApi, productsApi, couponsApi, ordersApi, settingsApi };

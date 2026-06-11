@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { productsApi, categoriesApi, Product, Category, ProductListResponse } from '@/lib/api';
+import { productsApi, categoriesApi, settingsApi, Product, Category, ProductListResponse, StoreSettings } from '@/lib/api';
 
 // ─── useProducts hook ─────────────────────────────────────────────────────────
 interface UseProductsParams {
@@ -75,4 +75,20 @@ export function useCategories() {
   }, []);
 
   return { categories, isLoading, error };
+}
+
+// ─── useSettings hook ────────────────────────────────────────────────────────
+export function useSettings() {
+  const [settings, setSettings] = useState<StoreSettings | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    settingsApi.get()
+      .then(res => setSettings(res))
+      .catch(e => setError(e instanceof Error ? e.message : 'Failed to load settings'))
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  return { settings, isLoading, error };
 }
