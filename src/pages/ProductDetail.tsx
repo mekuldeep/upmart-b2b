@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   ShoppingCart, Check, Package, ArrowLeft, ChevronLeft, ChevronRight,
-  Loader2, AlertCircle, Minus, Plus
+  Loader2, AlertCircle, Minus, Plus, X, ZoomIn, ZoomOut
 } from 'lucide-react';
 import { useProduct } from '@/hooks/useStore';
 import { useCart } from '@/contexts/CartContext';
@@ -26,6 +26,8 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [quantityError, setQuantityError] = useState<string | null>(null);
   const [activeImageIdx, setActiveImageIdx] = useState(0);
+  const [imageViewerOpen, setImageViewerOpen] = useState(false);
+  const [imageZoom, setImageZoom] = useState(1);
   const [added, setAdded] = useState(false);
 
   const availableStock = selectedVariant ? selectedVariant.stock : (product?.stock || 0);
@@ -106,6 +108,10 @@ const ProductDetail = () => {
     }
   }, [product?.id]); // Removed effectiveMin from dep array so it only sets once when product loads
 
+  useEffect(() => {
+    setImageZoom(1);
+  }, [activeImageIdx, imageViewerOpen]);
+
   const increaseQty = () => {
     if (!product) return;
     setQuantity(prev => {
@@ -163,16 +169,13 @@ const ProductDetail = () => {
     );
   }
 
-  // Image logic: show images based on selected variant
+  // Image logic: show images based on the selected variant only.
   let displayImages = [];
   
   if (selectedVariant) {
     const currentVariant = product.variants.find(v => v.id === selectedVariant.id);
     if (currentVariant && currentVariant.images && currentVariant.images.length > 0) {
       displayImages = currentVariant.images;
-    } else {
-      // Fallback to product images if variant has no images
-      displayImages = product.images || [];
     }
   } else {
     displayImages = product.images || [];
@@ -184,6 +187,8 @@ const ProductDetail = () => {
   }
 
   const activeImage = displayImages[activeImageIdx] || null;
+  const showPreviousImage = () => setActiveImageIdx(i => i > 0 ? i - 1 : displayImages.length - 1);
+  const showNextImage = () => setActiveImageIdx(i => i < displayImages.length - 1 ? i + 1 : 0);
 
   const handleAddToCart = () => {
     if (availableStock <= 0) {
@@ -209,7 +214,7 @@ const ProductDetail = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 pt-3 pb-8">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-muted-foreground font-body mb-6 flex-wrap">
         <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
@@ -227,72 +232,81 @@ const ProductDetail = () => {
         <span className="text-foreground">{product.name}</span>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-10 mb-16">
+      <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,0.95fr)] gap-10 mb-16">
         {/* Images */}
-        <div className="w-full max-w-[400px] mx-auto">
-          {/* Main image wrapper to allow buttons outside the card */}
-          <div className="relative mb-3">
-            {/* Main image card */}
-            <div className="relative aspect-square rounded-2xl overflow-hidden bg-white border border-border flex items-center justify-center">
-              {activeImage ? (
-                <NgrokImage
-                  src={getImageUrl(activeImage.url) || ''}
-                  alt={product.name}
-                  crossOrigin="anonymous"
-                  className="w-full h-full object-contain p-6"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-secondary">
-                  <Package className="w-20 h-20 text-muted-foreground/30" />
-                </div>
-              )}
-              {availableStock <= 0 && (
-                <div className="absolute inset-0 bg-foreground/50 flex items-center justify-center">
-                  <span className="bg-destructive text-destructive-foreground px-4 py-2 rounded-full font-display font-bold">
-                    Out of Stock
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Nav arrows (outside the overflow-hidden card) */}
+        <div className="w-full max-w-[640px] mx-auto lg:mx-0">
+          <div className="flex flex-col sm:flex-row gap-3">
+            {/* Thumbnails */}
             {displayImages.length > 1 && (
-              <>
-                <button
-                  onClick={() => setActiveImageIdx(i => i > 0 ? i - 1 : displayImages.length - 1)}
-                  className="absolute left-3 md:-left-12 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-background border border-border flex items-center justify-center hover:bg-secondary transition-colors shadow-soft z-10"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => setActiveImageIdx(i => i < displayImages.length - 1 ? i + 1 : 0)}
-                  className="absolute right-3 md:-right-12 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-background border border-border flex items-center justify-center hover:bg-secondary transition-colors shadow-soft z-10"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              </>
+              <div className="order-2 sm:order-1 flex sm:flex-col gap-2 overflow-x-auto sm:overflow-y-auto sm:max-h-[540px] pb-2 sm:pb-0 sm:pr-1">
+                {displayImages.map((img, i) => (
+                  <button
+                    key={img.id}
+                    onClick={() => setActiveImageIdx(i)}
+                    className={`flex-shrink-0 w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden border-2 transition-all bg-white ${activeImageIdx === i ? 'border-primary' : 'border-border hover:border-muted-foreground'}`}
+                    aria-label={`Show image ${i + 1}`}
+                  >
+                    <NgrokImage
+                      src={getImageUrl(img.url) || ''}
+                      alt=""
+                      crossOrigin="anonymous"
+                      className="w-full h-full object-contain p-1"
+                    />
+                  </button>
+                ))}
+              </div>
             )}
-          </div>
 
-          {/* Thumbnails */}
-          {displayImages.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto pb-2">
-              {displayImages.map((img, i) => (
-                <button
-                  key={img.id}
-                  onClick={() => setActiveImageIdx(i)}
-                  className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all bg-white ${activeImageIdx === i ? 'border-primary' : 'border-border hover:border-muted-foreground'}`}
-                >
-                  <NgrokImage 
-                    src={getImageUrl(img.url) || ''} 
-                    alt="" 
+            {/* Main image wrapper */}
+            <div className="order-1 sm:order-2 relative flex-1">
+              <button
+                type="button"
+                onClick={() => activeImage && setImageViewerOpen(true)}
+                className="relative w-full aspect-square min-h-[320px] sm:min-h-[460px] rounded-2xl overflow-hidden bg-white border border-border flex items-center justify-center cursor-zoom-in"
+                aria-label="Open product image viewer"
+              >
+                {activeImage ? (
+                  <NgrokImage
+                    src={getImageUrl(activeImage.url) || ''}
+                    alt={product.name}
                     crossOrigin="anonymous"
-                    className="w-full h-full object-contain p-1" 
+                    className="w-full h-full object-contain p-4 sm:p-8"
                   />
-                </button>
-              ))}
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-secondary text-muted-foreground">
+                    <Package className="w-20 h-20 text-muted-foreground/30 mb-3" />
+                    <span className="text-sm">No image for this variant</span>
+                  </div>
+                )}
+                {availableStock <= 0 && (
+                  <div className="absolute inset-0 bg-foreground/50 flex items-center justify-center">
+                    <span className="bg-destructive text-destructive-foreground px-4 py-2 rounded-full font-display font-bold">
+                      Out of Stock
+                    </span>
+                  </div>
+                )}
+              </button>
+
+              {displayImages.length > 1 && (
+                <>
+                  <button
+                    onClick={showPreviousImage}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center hover:bg-secondary transition-colors shadow-soft z-10"
+                    aria-label="Previous product image"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={showNextImage}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-background border border-border flex items-center justify-center hover:bg-secondary transition-colors shadow-soft z-10"
+                    aria-label="Next product image"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </>
+              )}
             </div>
-          )}
+          </div>
         </div>
 
         {/* Product Info */}
@@ -476,6 +490,99 @@ const ProductDetail = () => {
           </div>
         </div>
       </div>
+
+      {imageViewerOpen && activeImage && (
+        <div className="fixed inset-0 z-50 bg-black/90 flex flex-col">
+          <div className="flex items-center justify-between gap-3 px-4 py-3 text-white">
+            <div className="min-w-0">
+              <p className="font-display font-semibold truncate">{product.name}</p>
+              {selectedVariant && (
+                <p className="text-xs text-white/70 truncate">{selectedVariant.name}</p>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setImageZoom((zoom) => Math.max(1, Number((zoom - 0.25).toFixed(2))))}
+                className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
+                aria-label="Zoom out"
+              >
+                <ZoomOut className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setImageZoom(1)}
+                className="h-9 px-3 rounded-full bg-white/10 hover:bg-white/20 text-xs font-semibold tabular-nums"
+              >
+                {Math.round(imageZoom * 100)}%
+              </button>
+              <button
+                onClick={() => setImageZoom((zoom) => Math.min(3, Number((zoom + 0.25).toFixed(2))))}
+                className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
+                aria-label="Zoom in"
+              >
+                <ZoomIn className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setImageViewerOpen(false)}
+                className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center"
+                aria-label="Close image viewer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          <div className="relative flex-1 min-h-0 overflow-hidden">
+            <div className="absolute inset-0 flex items-center justify-center overflow-auto p-4 sm:p-8">
+              <NgrokImage
+                src={getImageUrl(activeImage.url) || ''}
+                alt={product.name}
+                crossOrigin="anonymous"
+                className="max-w-full max-h-full object-contain transition-transform duration-150"
+                style={{ transform: `scale(${imageZoom})` }}
+              />
+            </div>
+
+            {displayImages.length > 1 && (
+              <>
+                <button
+                  onClick={showPreviousImage}
+                  className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center"
+                  aria-label="Previous product image"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+                <button
+                  onClick={showNextImage}
+                  className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center"
+                  aria-label="Next product image"
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </button>
+              </>
+            )}
+          </div>
+
+          {displayImages.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto px-4 py-3 border-t border-white/10">
+              {displayImages.map((img, i) => (
+                <button
+                  key={img.id}
+                  onClick={() => setActiveImageIdx(i)}
+                  className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 bg-white ${activeImageIdx === i ? 'border-primary' : 'border-white/30 hover:border-white'}`}
+                  aria-label={`Show image ${i + 1}`}
+                >
+                  <NgrokImage
+                    src={getImageUrl(img.url) || ''}
+                    alt=""
+                    crossOrigin="anonymous"
+                    className="w-full h-full object-contain p-1"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Related Products */}
       {related.length > 0 && (
