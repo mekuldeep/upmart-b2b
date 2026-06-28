@@ -11,6 +11,7 @@ const Header = () => {
   const { user, logout } = useAuth();
   const { totalItems } = useCart();
   const { categories } = useCategories();
+  const mainCategories = categories.filter(cat => !cat.parent_id);
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -59,7 +60,7 @@ const Header = () => {
               Home
             </Link>
 
-            {categories.slice(0, 5).map(cat => (
+            {mainCategories.slice(0, 5).map(cat => (
               <Link
                 key={cat.id}
                 to={`/category/${cat.slug}`}
@@ -215,7 +216,7 @@ const Header = () => {
             <Link to="/products" onClick={() => setMobileOpen(false)} className="font-display text-sm font-semibold py-3 px-4 rounded-lg hover:bg-secondary text-foreground transition-colors">
               All Products
             </Link>
-            {categories.slice(0, 6).map(cat => (
+            {mainCategories.slice(0, 6).map(cat => (
               <Link
                 key={cat.id}
                 to={`/category/${cat.slug}`}

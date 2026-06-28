@@ -8,6 +8,7 @@ interface UseProductsParams {
   search?: string;
   category_id?: number;
   category_slug?: string;
+  category_ids?: number[];
   sort?: string;
   min_price?: number;
   max_price?: number;

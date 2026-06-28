@@ -139,7 +139,10 @@ export interface Category {
   slug: string;
   description?: string;
   parent_id?: number;
+  sort_order?: number;
+  is_active?: boolean;
   product_count: number;
+  children?: Category[];
 }
 
 export const categoriesApi = {
@@ -198,12 +201,17 @@ export const productsApi = {
     search?: string;
     category_id?: number;
     category_slug?: string;
+    category_ids?: number[];
     sort?: string;
     min_price?: number;
     max_price?: number;
   } = {}) => {
     const qs = new URLSearchParams();
     Object.entries(params).forEach(([k, v]) => {
+      if (Array.isArray(v)) {
+        if (v.length > 0) qs.set(k, v.join(','));
+        return;
+      }
       if (v !== undefined && v !== '' && v !== null) qs.set(k, String(v));
     });
     return request<ProductListResponse>(`/api/store/products?${qs.toString()}`);

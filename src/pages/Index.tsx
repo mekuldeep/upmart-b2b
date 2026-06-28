@@ -36,7 +36,10 @@ const features = [
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchInput, setSearchInput] = useState('');
+  const [showAllCategories, setShowAllCategories] = useState(false);
   const { categories } = useCategories();
+  const topLevelCategories = categories.filter(cat => !cat.parent_id);
+  const visibleCategories = showAllCategories ? topLevelCategories : topLevelCategories.slice(0, 8);
 
   const { data: featuredData, isLoading: loadingFeatured } = useProducts({ page: 1, per_page: 8, sort: 'newest' });
   const { data: searchData, isLoading: loadingSearch } = useProducts(
@@ -93,7 +96,7 @@ const Index = () => {
 
             {/* Quick links */}
             <div className="flex flex-wrap gap-2 mt-4 animate-fade-in" style={{ animationDelay: '0.4s' }}>
-              {categories.slice(0, 5).map(cat => (
+              {topLevelCategories.slice(0, 5).map(cat => (
                 <Link
                   key={cat.id}
                   to={`/category/${cat.slug}`}
@@ -163,7 +166,7 @@ const Index = () => {
                 All Products <ChevronRight className="w-4 h-4" />
               </Link>
             </div>
-            {categories.length === 0 ? (
+            {topLevelCategories.length === 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[...Array(4)].map((_, i) => (
                   <div key={i} className="bg-card rounded-xl p-6 animate-pulse h-28" />
@@ -171,7 +174,7 @@ const Index = () => {
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {categories.slice(0, 8).map((cat: Category) => (
+                {visibleCategories.map((cat: Category) => (
                   <Link
                     key={cat.id}
                     to={`/category/${cat.slug}`}
@@ -187,6 +190,18 @@ const Index = () => {
                     )}
                   </Link>
                 ))}
+              </div>
+            )}
+            {topLevelCategories.length > 8 && (
+              <div className="mt-6 flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => setShowAllCategories(value => !value)}
+                  className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-display font-semibold text-foreground hover:bg-secondary transition-colors"
+                >
+                  {showAllCategories ? 'Show Less' : 'All Categories'}
+                  <ChevronRight className={`w-4 h-4 transition-transform ${showAllCategories ? '-rotate-90' : 'rotate-90'}`} />
+                </button>
               </div>
             )}
           </section>

@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { SlidersHorizontal, Search, ChevronDown, Loader2, X, Grid3X3, List } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { SlidersHorizontal, Search, Loader2, X, Grid3X3, List } from 'lucide-react';
 import { useProducts, useCategories } from '@/hooks/useStore';
-import { productsApi, Product, getImageUrl } from '@/lib/api';
+import { Product, getImageUrl } from '@/lib/api';
 
 import ProductCard from '@/components/ProductCard';
 import NgrokImage from '@/components/NgrokImage';
@@ -16,7 +16,6 @@ const SORT_OPTIONS = [
 
 const ProductsPage = () => {
   const { slug } = useParams<{ slug?: string }>();
-  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('newest');
   const [page, setPage] = useState(1);
@@ -24,28 +23,48 @@ const ProductsPage = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
+  const [selectedSubcategoryIds, setSelectedSubcategoryIds] = useState<number[]>([]);
 
   const { categories } = useCategories();
   const activeCategory = slug ? categories.find(c => c.slug === slug) : null;
+  const mainCategories = useMemo(() => categories.filter(cat => !cat.parent_id), [categories]);
+  const activeMainCategory = activeCategory?.parent_id
+    ? categories.find(cat => cat.id === activeCategory.parent_id) || activeCategory
+    : activeCategory;
+  const activeSubcategories = useMemo(() => {
+    if (!activeMainCategory) return [];
+    const children = activeMainCategory.children?.length
+      ? activeMainCategory.children
+      : categories.filter(cat => cat.parent_id === activeMainCategory.id);
+    return children.filter(cat => cat.is_active !== false);
+  }, [activeMainCategory, categories]);
 
   const { data, isLoading, error } = useProducts({
     page,
     per_page: 20,
     search: search || undefined,
     category_slug: slug,
+    category_ids: selectedSubcategoryIds.length ? selectedSubcategoryIds : undefined,
     sort,
     min_price: minPrice ? parseFloat(minPrice) : undefined,
     max_price: maxPrice ? parseFloat(maxPrice) : undefined,
   });
 
   // Reset page on filter change
-  useEffect(() => { setPage(1); }, [search, slug, sort, minPrice, maxPrice]);
+  useEffect(() => { setPage(1); }, [search, slug, sort, minPrice, maxPrice, selectedSubcategoryIds]);
+  useEffect(() => { setSelectedSubcategoryIds([]); }, [slug]);
 
   const products = data?.products || [];
   const totalPages = data?.pages || 1;
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+  };
+
+  const toggleSubcategory = (id: number) => {
+    setSelectedSubcategoryIds((selected) =>
+      selected.includes(id) ? selected.filter(item => item !== id) : [...selected, id]
+    );
   };
 
   return (
@@ -67,27 +86,79 @@ const ProductsPage = () => {
 
       <div className="flex gap-6">
         {/* Sidebar Filters */}
-        <aside className={`${showFilters ? 'block' : 'hidden'} md:block w-full md:w-64 flex-shrink-0`}>
-          <div className="bg-card rounded-xl p-5 shadow-soft sticky top-24 space-y-6">
+        {showFilters && (
+          <button
+            type="button"
+            className="fixed inset-0 z-40 bg-black/40 md:hidden"
+            onClick={() => setShowFilters(false)}
+            aria-label="Close filters"
+          />
+        )}
+        <aside className={`${showFilters ? 'fixed inset-x-4 top-20 z-50 block max-h-[calc(100vh-6rem)] overflow-y-auto' : 'hidden'} md:static md:z-auto md:block md:max-h-none md:w-64 flex-shrink-0`}>
+          <div className="bg-card rounded-xl p-5 shadow-soft md:sticky md:top-24 space-y-6">
+            <div className="flex items-center justify-between md:hidden">
+              <h2 className="font-display font-semibold text-foreground">Filters</h2>
+              <button type="button" onClick={() => setShowFilters(false)} className="rounded-lg p-2 hover:bg-secondary">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
             <div>
               <h3 className="font-display font-semibold text-foreground mb-3">Categories</h3>
               <div className="space-y-1">
                 <Link
                   to="/products"
+                  onClick={() => setShowFilters(false)}
                   className={`block text-sm font-body px-3 py-2 rounded-lg transition-colors ${!slug ? 'bg-primary/10 text-primary font-semibold' : 'text-foreground hover:bg-secondary'}`}
                 >
                   All Products
                 </Link>
-                {categories.map(cat => (
-                  <Link
-                    key={cat.id}
-                    to={`/category/${cat.slug}`}
-                    className={`flex items-center justify-between text-sm font-body px-3 py-2 rounded-lg transition-colors ${slug === cat.slug ? 'bg-primary/10 text-primary font-semibold' : 'text-foreground hover:bg-secondary'}`}
-                  >
-                    <span>{cat.name}</span>
-                    <span className="text-xs text-muted-foreground">{cat.product_count}</span>
-                  </Link>
-                ))}
+                {mainCategories.map(cat => {
+                  const isActiveMain = activeMainCategory?.id === cat.id;
+                  const childCategories = isActiveMain ? activeSubcategories : [];
+
+                  return (
+                    <div key={cat.id}>
+                      <Link
+                        to={`/category/${cat.slug}`}
+                        onClick={() => setShowFilters(false)}
+                        className={`flex items-center justify-between text-sm font-body px-3 py-2 rounded-lg transition-colors ${isActiveMain ? 'bg-primary/10 text-primary font-semibold' : 'text-foreground hover:bg-secondary'}`}
+                      >
+                        <span>{cat.name}</span>
+                        <span className="text-xs text-muted-foreground">{cat.product_count}</span>
+                      </Link>
+
+                      {childCategories.length > 0 && (
+                        <div className="ml-3 mt-1 space-y-1 border-l border-border pl-3">
+                          {selectedSubcategoryIds.length > 0 && (
+                            <div className="flex justify-end px-2 py-1">
+                              <button
+                                type="button"
+                                onClick={() => setSelectedSubcategoryIds([])}
+                                className="text-xs text-muted-foreground hover:text-foreground"
+                              >
+                                Clear
+                              </button>
+                            </div>
+                          )}
+                          {childCategories.map(child => (
+                            <label key={child.id} className="flex items-center justify-between gap-3 rounded-lg px-2 py-2 text-sm font-body hover:bg-secondary">
+                              <span className="flex min-w-0 items-center gap-2">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedSubcategoryIds.includes(child.id)}
+                                  onChange={() => toggleSubcategory(child.id)}
+                                  className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                                />
+                                <span className="truncate">{child.name}</span>
+                              </span>
+                              <span className="text-xs text-muted-foreground">{child.product_count}</span>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
