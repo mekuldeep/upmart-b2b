@@ -51,7 +51,8 @@ const ProductsPage = () => {
     page,
     per_page: 20,
     search: search || undefined,
-    category_slug: routeSlug,
+    category_slug: selectedSubcategoryIds.length > 0 ? undefined : routeSlug,
+    category_id: selectedSubcategoryIds.length === 1 ? selectedSubcategoryIds[0] : undefined,
     category_ids: categoryFilterIds.length ? categoryFilterIds : undefined,
     sort,
     min_price: minPrice ? parseFloat(minPrice) : undefined,
@@ -62,7 +63,11 @@ const ProductsPage = () => {
   useEffect(() => { setPage(1); }, [search, routeSlug, sort, minPrice, maxPrice, categoryFilterIds]);
   useEffect(() => { setSelectedSubcategoryIds([]); }, [routeSlug]);
 
-  const products = data?.products || [];
+  const products = selectedSubcategoryIds.length > 0
+    ? (data?.products || []).filter(product =>
+        product.category_id ? selectedSubcategoryIds.includes(product.category_id) : false
+      )
+    : (data?.products || []);
   const totalPages = data?.pages || 1;
 
   const handleSearchSubmit = (e: React.FormEvent) => {
