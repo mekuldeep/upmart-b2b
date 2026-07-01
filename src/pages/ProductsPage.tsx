@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useLocation, useParams, Link } from 'react-router-dom';
 import { SlidersHorizontal, Search, Loader2, X, Grid3X3, List } from 'lucide-react';
 import { useProducts, useCategories } from '@/hooks/useStore';
 import { Product, getImageUrl } from '@/lib/api';
@@ -16,6 +16,8 @@ const SORT_OPTIONS = [
 
 const ProductsPage = () => {
   const { slug } = useParams<{ slug?: string }>();
+  const location = useLocation();
+  const routeSlug = slug || (location.pathname !== '/products' ? location.pathname.replace(/^\/+/, '') : undefined);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('newest');
   const [page, setPage] = useState(1);
@@ -26,7 +28,7 @@ const ProductsPage = () => {
   const [selectedSubcategoryIds, setSelectedSubcategoryIds] = useState<number[]>([]);
 
   const { categories } = useCategories();
-  const activeCategory = slug ? categories.find(c => c.slug === slug) : null;
+  const activeCategory = routeSlug ? categories.find(c => c.slug === routeSlug) : null;
   const mainCategories = useMemo(() => categories.filter(cat => !cat.parent_id), [categories]);
   const activeMainCategory = activeCategory?.parent_id
     ? categories.find(cat => cat.id === activeCategory.parent_id) || activeCategory
@@ -49,7 +51,7 @@ const ProductsPage = () => {
     page,
     per_page: 20,
     search: search || undefined,
-    category_slug: activeCategory ? undefined : slug,
+    category_slug: routeSlug,
     category_ids: categoryFilterIds.length ? categoryFilterIds : undefined,
     sort,
     min_price: minPrice ? parseFloat(minPrice) : undefined,
@@ -57,8 +59,8 @@ const ProductsPage = () => {
   });
 
   // Reset page on filter change
-  useEffect(() => { setPage(1); }, [search, slug, sort, minPrice, maxPrice, categoryFilterIds]);
-  useEffect(() => { setSelectedSubcategoryIds([]); }, [slug]);
+  useEffect(() => { setPage(1); }, [search, routeSlug, sort, minPrice, maxPrice, categoryFilterIds]);
+  useEffect(() => { setSelectedSubcategoryIds([]); }, [routeSlug]);
 
   const products = data?.products || [];
   const totalPages = data?.pages || 1;
@@ -114,7 +116,7 @@ const ProductsPage = () => {
                 <Link
                   to="/products"
                   onClick={() => setShowFilters(false)}
-                  className={`block text-sm font-body px-3 py-2 rounded-lg transition-colors ${!slug ? 'bg-primary/10 text-primary font-semibold' : 'text-foreground hover:bg-secondary'}`}
+                  className={`block text-sm font-body px-3 py-2 rounded-lg transition-colors ${!routeSlug ? 'bg-primary/10 text-primary font-semibold' : 'text-foreground hover:bg-secondary'}`}
                 >
                   All Products
                 </Link>
