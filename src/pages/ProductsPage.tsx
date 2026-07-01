@@ -38,20 +38,26 @@ const ProductsPage = () => {
       : categories.filter(cat => cat.parent_id === activeMainCategory.id);
     return children.filter(cat => cat.is_active !== false);
   }, [activeMainCategory, categories]);
+  const categoryFilterIds = useMemo(() => {
+    if (selectedSubcategoryIds.length > 0) return selectedSubcategoryIds;
+    if (!activeCategory) return [];
+    if (activeCategory.parent_id) return [activeCategory.id];
+    return [activeCategory.id, ...activeSubcategories.map(cat => cat.id)];
+  }, [activeCategory, activeSubcategories, selectedSubcategoryIds]);
 
   const { data, isLoading, error } = useProducts({
     page,
     per_page: 20,
     search: search || undefined,
-    category_slug: slug,
-    category_ids: selectedSubcategoryIds.length ? selectedSubcategoryIds : undefined,
+    category_slug: activeCategory ? undefined : slug,
+    category_ids: categoryFilterIds.length ? categoryFilterIds : undefined,
     sort,
     min_price: minPrice ? parseFloat(minPrice) : undefined,
     max_price: maxPrice ? parseFloat(maxPrice) : undefined,
   });
 
   // Reset page on filter change
-  useEffect(() => { setPage(1); }, [search, slug, sort, minPrice, maxPrice, selectedSubcategoryIds]);
+  useEffect(() => { setPage(1); }, [search, slug, sort, minPrice, maxPrice, categoryFilterIds]);
   useEffect(() => { setSelectedSubcategoryIds([]); }, [slug]);
 
   const products = data?.products || [];
